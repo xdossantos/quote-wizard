@@ -21,6 +21,12 @@
     ],
     "strictNullChecks": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/cypress/support/e2e.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/cypress/support/e2e.ts"
+  ],
   "exclude": ["node_modules", "**/*.cy.*"]
 }

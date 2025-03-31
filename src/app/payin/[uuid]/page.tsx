@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import AcceptQuoteDialog from "../../../components/accept-quote-dialog";
 
 export default async function Home({
   params,
@@ -6,5 +6,5 @@ export default async function Home({
   params: Promise<{ uuid: string }>;
 }) {
   const { uuid } = await params;
-  redirect(`/payin/${uuid}`);
+  return <AcceptQuoteDialog uuid={uuid} />;
 }

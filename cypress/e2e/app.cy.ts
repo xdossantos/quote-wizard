@@ -2,21 +2,57 @@
 // Disable ESLint to prevent failing linting inside the Next.js repo.
 // If you're using ESLint on your project, we recommend installing the ESLint Cypress plugin instead:
 // https://github.com/cypress-io/eslint-plugin-cypress
+// import AcceptQuoteDialog from '../../src/components/accept-quote-dialog';
 
-// Cypress E2E Test
-describe("Navigation", () => {
-  it("should navigate to the about page", () => {
+describe("AcceptQuoteDialog", () => {
+  beforeEach(() => {
+    cy.intercept("GET", "https://api.sandbox.bvnk.com/api/v1/pay/*/summary", {
+      merchantName: "Test Merchant",
+      amount: 100,
+      currency: "EUR",
+      reference: "TEST123",
+    }).as("getSummary");
+
+    cy.intercept(
+      "PUT",
+      "https://api.sandbox.bvnk.com/api/v1/pay/*/update/summary",
+      {
+        merchantName: "Test Merchant",
+        amount: 0.005,
+        currency: "BTC",
+        reference: "TEST123",
+      },
+    ).as("updateQuote");
+  });
+
+  it("loads and displays quote information", () => {
     // Start from the index page
-    cy.visit("http://localhost:3000");
+    cy.visit("http://localhost:3000/payin/uuid");
+    cy.wait("@getSummary");
 
-    // Find a link with an href attribute containing "about" and click it
-    cy.get('a[href*="about"]').click();
+    cy.contains("Test Merchant").should("be.visible");
+    cy.contains("100").should("be.visible");
+    cy.contains("TEST123").should("be.visible");
+  });
 
-    // The new url should include "/about"
-    cy.url().should("include", "/about");
+  it("allows currency selection", () => {
+    cy.visit("http://localhost:3000/payin/uuid");
+    cy.wait("@getSummary");
 
-    // The new page should contain an h1 with "About page"
-    cy.get("h1").contains("About Page");
+    cy.get('[data-testid="currency-select"]').select("BTC");
+    cy.wait("@updateQuote");
+
+    cy.contains("0.005").should("be.visible");
+    cy.contains("BTC").should("be.visible");
+  });
+
+  it("displays all currency options", () => {
+    cy.visit("http://localhost:3000/payin/uuid");
+    cy.get('[data-testid="currency-select"]').within(() => {
+      cy.contains("Bitcoin BTC").should("exist");
+      cy.contains("Ethereum ETH").should("exist");
+      cy.contains("Litecoin LTC").should("exist");
+    });
   });
 });
 

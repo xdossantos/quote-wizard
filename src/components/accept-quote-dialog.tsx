@@ -1,9 +1,10 @@
 "use client";
 import * as React from "react";
 import { useQuoteManagement } from "../hooks/use-quote-management";
-import ErrorNotification from "./error-notification";
-import { Currency, CURRENCY_OPTIONS } from "../app/types";
+import { redirect } from "next/navigation";
+import { Currency, CURRENCY_OPTIONS, ErrorResponse } from "../app/types";
 import QuoteDetails from "./quote-details";
+import Skeleton from "./skeleton";
 
 export default function AcceptQuoteDialog({ uuid }) {
   const {
@@ -31,8 +32,10 @@ export default function AcceptQuoteDialog({ uuid }) {
     await updateQuote({ currency, payInMethod: "crypto" });
   };
 
-  if (loading) return <>loading</>;
-  if (error && !summary) return <ErrorNotification />;
+  if (loading) return <Skeleton />;
+  if ((error as ErrorResponse)?.code) {
+    redirect(`/payin/${uuid}/expired`);
+  }
 
   return (
     <div className="flex flex-col items-center w-[460px] max-w-full bg-white rounded-[10px] p-[25px] gap-[25px]">

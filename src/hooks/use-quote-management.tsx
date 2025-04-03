@@ -1,15 +1,24 @@
 import { useState } from "react";
-import { QuoteDetails, QuoteSummary, UpdateQuoteBody } from "../app/types";
+import {
+  ErrorResponse,
+  PaymentDetails,
+  QuoteDetails,
+  QuoteSummary,
+  UpdateQuoteBody,
+} from "../app/types";
 
 export const useQuoteManagement = () => {
   const [uuid, setUuid] = useState<string | null>(null);
   const [summary, setSummary] = useState<QuoteSummary | null>(null);
   const [details, setDetails] = useState<QuoteDetails | null>(null);
   const [isQuoteConfirmed, setIsQuoteConfirmed] = useState<boolean>(false);
+  const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | ErrorResponse | null>(null);
 
-  const fetchSummary = async (uuidParams) => {
+  const fetchSummary = async (uuidParams: string) => {
     if (!uuidParams || loading) return;
     try {
       setLoading(true);
@@ -45,10 +54,17 @@ export const useQuoteManagement = () => {
           body: JSON.stringify(body),
         },
       );
-      if (!response.ok) throw new Error("Failed to update quote");
-      const data = await response.json();
+      const data: ErrorResponse | QuoteDetails = await response.json();
       console.table({ updateQuote: "updateQuote", asyncDetails: data });
-      setDetails(data);
+
+      if (
+        (data as ErrorResponse).message ===
+        "cannot update payment with status EXPIRED"
+      ) {
+        setError(data as ErrorResponse);
+      } else {
+        setDetails(data as QuoteDetails);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -77,22 +93,44 @@ export const useQuoteManagement = () => {
       if (!response.ok) {
         throw new Error("Failed to accept quote");
       }
+      console.table({ confirmQuote: "confirmQuote", response: response });
+      return response.status === 200 && response.ok === true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       console.error("Error accepting quote:", err);
     } finally {
       setLoading(false);
     }
-    return isQuoteConfirmed;
+  };
+
+  const fetchPaymentDetails = async (uuidParams: string) => {
+    if (!uuidParams || loading) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(
+        `https://api.sandbox.bvnk.com/api/v1/pay/${uuidParams}/summary`,
+      );
+      if (!response.ok) throw new Error("Failed to fetch payment details");
+      const data = await response.json();
+      console.table({ fetchPaymentDetails: "fetchPaymentDetails", data });
+      setPaymentDetails(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return {
     fetchSummary,
+    fetchPaymentDetails,
     summary,
     details,
     loading,
     error,
     isQuoteConfirmed,
+    paymentDetails,
     updateQuote,
     confirmQuote,
   };

@@ -1,4 +1,4 @@
-import PayQuote from "../../../components/pay-quote";
+import PayQuote from "../../../../components/pay-quote";
 
 export default async function PayQuotePage({
   params,

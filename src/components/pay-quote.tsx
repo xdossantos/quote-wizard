@@ -2,32 +2,37 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useQuoteManagement } from "../hooks/use-quote-management";
-import ErrorNotification from "./error-notification";
+import { redirect } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 
+const NO_TIME_LEFT = "00:00:00";
 interface PayQuoteProps {
   uuid: string;
 }
 
 const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
-  const { summary, loading, error } = useQuoteManagement(uuid);
-  const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
+  const { paymentDetails, loading, error, fetchPaymentDetails } =
+    useQuoteManagement();
+  const [timeLeft, setTimeLeft] = useState<string | null>(null);
   const [copied, setCopied] = useState<{ amount: boolean; address: boolean }>({
     amount: false,
     address: false,
   });
 
-  // Format the address for display (shortened version)
-  const formatAddress = (address: string): string => {
+  useEffect(() => {
+    fetchPaymentDetails(uuid);
+  }, []);
+
+  const formatAddress = (address?: string): string => {
     if (!address) return "";
     return `${address.substring(0, 6)}...${address.substring(address.length - 5)}`;
   };
 
-  // Format the full time remaining
   const formatTimeRemaining = useCallback((expiryTimestamp: number): string => {
     const now = new Date().getTime();
     const timeRemaining = Math.max(0, expiryTimestamp - now);
 
-    if (timeRemaining <= 0) return "00:00:00";
+    if (timeRemaining <= 0) return NO_TIME_LEFT;
 
     const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
     const minutes = Math.floor(
@@ -38,7 +43,6 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   }, []);
 
-  // Copy text to clipboard
   const copyToClipboard = async (text: string, type: "amount" | "address") => {
     try {
       await navigator.clipboard.writeText(text);
@@ -51,41 +55,41 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
     }
   };
 
-  // Update the countdown timer
   useEffect(() => {
-    if (!summary?.expiryDate) return;
+    if (!paymentDetails?.expiryDate) return;
 
     const updateTimer = () => {
-      setTimeLeft(formatTimeRemaining(summary.expiryDate));
+      setTimeLeft(formatTimeRemaining(Number(paymentDetails?.expiryDate)));
     };
 
     updateTimer();
     const timerId = setInterval(updateTimer, 1000);
 
     return () => clearInterval(timerId);
-  }, [summary?.expiryDate, formatTimeRemaining]);
+  }, [paymentDetails?.expiryDate, formatTimeRemaining]);
 
-  if (loading)
+  if (loading || !paymentDetails?.address?.address)
     return (
       <div className="flex justify-center items-center min-h-screen">
         Loading...
       </div>
     );
-  if (error || !summary) return <ErrorNotification />;
+  if (timeLeft === NO_TIME_LEFT || error) {
+    redirect(`/payin/${uuid}/expired`);
+  }
 
-  const amount = summary.paidCurrency?.amount || 0;
-  const currency = summary.paidCurrency?.currency || "BTC";
-  console.log(summary.address);
-  const address = summary.address.address || "";
-  // TODO REDIECT TO EXPIREY?ERROR PAGE IF NO ADDRESS>ADDRSS
+  const {
+    address: { address },
+    paidCurrency: { amount, currency },
+  } = paymentDetails;
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-[#f5f5f5] p-5">
-      <div className="flex flex-col items-center w-[449px] p-[25px] bg-white rounded-[10px] gap-[25px]">
-        <div className="text-[20px] font-medium leading-[28px] text-[#0A1628] font-[Inter,sans-serif] w-[303px] text-center">
+      <div className="flex flex-col items-center p-[25px] bg-white rounded-[10px] gap-[25px]">
+        <div className="text-[20px] font-medium leading-[28px] text-[#0A1628] font-[Inter,sans-serif] w-full text-center">
           Pay with {currency}
         </div>
-        <div className="w-[303px] text-[14px] leading-[22px] text-[#556877] text-center font-[Inter,sans-serif]">
+        <div className="w-full text-[14px] leading-[22px] text-[#556877] text-center font-[Inter,sans-serif]">
           To complete this payment send the amount due to the {currency} address
           provided below.
         </div>
@@ -123,10 +127,11 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
             </div>
           </div>
           <div className="flex flex-col items-center gap-[12px] pt-[12px]">
-            <img
-              src={`https://chart.googleapis.com/chart?chs=140x140&cht=qr&chl=${address}&choe=UTF-8`}
-              alt="QR Code"
-              className="w-[140px] h-[140px]"
+            <QRCodeSVG
+              value={address}
+              size={140}
+              level="L"
+              className="w-full h-[140px]"
             />
             <div className="text-[12px] leading-[16px] text-[#556877] font-[Inter,sans-serif] text-center">
               {address}

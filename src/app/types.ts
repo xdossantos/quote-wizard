@@ -56,13 +56,20 @@ export interface UpdateQuoteBody {
   payInMethod: "crypto";
 }
 
+export interface ErrorResponse {
+  code: string;
+  message: string;
+  parameter: string;
+  requestId: string;
+}
+
 export interface QuoteDetailsData {
   uuid: string;
   merchantDisplayName: string;
-  merchantId: string;
+  merchantId?: string;
   dateCreated: number;
   expiryDate: number;
-  quoteExpiryDate: null | number;
+  quoteExpiryDate?: number;
   acceptanceExpiryDate: string;
   quoteStatus: string;
   reference: string;
@@ -80,7 +87,7 @@ export interface QuoteDetailsData {
     actual: number;
   };
   paidCurrency: {
-    currency: null | string;
+    currency?: string;
     amount: number;
     actual: number;
   };
@@ -89,19 +96,87 @@ export interface QuoteDetailsData {
     amount: number;
     actual: number;
   };
-  networkFeeCurrency: null | string;
-  displayRate: null | number;
-  exchangeRate: null | number;
-  address: null | string;
+  networkFeeCurrency?: string;
+  displayRate?: number;
+  exchangeRate?: number;
+  address?: string;
   returnUrl: string;
   redirectUrl: string;
   transactions: string[];
-  refund: null | string;
+  refund?: string;
   refunds: string[];
   currencyOptions: string[];
   flow: string;
   twoStep: boolean;
   customerId: string;
+}
+
+export interface PaymentDetails {
+  uuid: string;
+  merchantDisplayName: string;
+  merchantId: string;
+  dateCreated: number;
+  expiryDate: number;
+  quoteExpiryDate: number;
+  acceptanceExpiryDate: number;
+  quoteStatus: string;
+  reference: string;
+  type: string;
+  subType: string;
+  status: string;
+  displayCurrency: {
+    currency: string;
+    amount: number;
+    actual: number;
+  };
+  walletCurrency: {
+    currency: string;
+    amount: number;
+    actual: number;
+  };
+  paidCurrency: {
+    currency: string;
+    amount: number;
+    actual: number;
+  };
+  feeCurrency: {
+    currency: string;
+    amount: number;
+    actual: number;
+  };
+  networkFeeCurrency: {
+    currency?: string;
+    amount: number;
+    actual: number;
+  };
+  displayRate: {
+    base: string;
+    counter: string;
+    rate: number;
+  };
+  exchangeRate: {
+    base: string;
+    counter: string;
+    rate: number;
+  };
+  address: {
+    address: string;
+    tag?: string;
+    protocol: string;
+    uri: string;
+    alternatives: unknown[];
+  };
+  returnUrl: string;
+  redirectUrl: string;
+  transactions: unknown[];
+  refund?: unknown;
+  refunds: unknown[];
+  currencyOptions: unknown[];
+  flow: string;
+  twoStep: boolean;
+  customerId: string;
+  networkFeeBilledTo: string;
+  networkFeeRates: unknown[];
 }
 
 export type Currency = "BTC" | "ETH" | "LTC";

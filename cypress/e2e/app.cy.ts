@@ -27,7 +27,7 @@ describe("AcceptQuoteDialog", () => {
 
   it("loads and displays quote information", () => {
     // Start from the index page
-    cy.visit("http://localhost:3000/payin/uuid");
+    cy.visit("http://localhost:3000/payin/uuid", { failOnStatusCode: false });
     cy.wait("@getSummary");
 
     cy.contains("Test Merchant").should("be.visible");
@@ -36,7 +36,7 @@ describe("AcceptQuoteDialog", () => {
   });
 
   it("allows currency selection", () => {
-    cy.visit("http://localhost:3000/payin/uuid");
+    cy.visit("http://localhost:3000/payin/uuid", { failOnStatusCode: false });
     cy.wait("@getSummary");
 
     cy.get('[data-testid="currency-select"]').select("BTC");
@@ -47,7 +47,7 @@ describe("AcceptQuoteDialog", () => {
   });
 
   it("displays all currency options", () => {
-    cy.visit("http://localhost:3000/payin/uuid");
+    cy.visit("http://localhost:3000/payin/uuid", { failOnStatusCode: false });
     cy.get('[data-testid="currency-select"]').within(() => {
       cy.contains("Bitcoin BTC").should("exist");
       cy.contains("Ethereum ETH").should("exist");

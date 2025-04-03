@@ -33,10 +33,7 @@ export default function AcceptQuoteDialog({ uuid }) {
   };
 
   if (loading) return <Skeleton />;
-  if (
-    (error as ErrorResponse)?.message ===
-    "cannot update payment with status EXPIRED"
-  ) {
+  if ((error as ErrorResponse)?.code) {
     redirect(`/payin/${uuid}/expired`);
   }
 

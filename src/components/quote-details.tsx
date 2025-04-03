@@ -65,6 +65,10 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
 
   const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
 
+  if (!details.paidCurrency) {
+    redirect(`/payin/${details.uuid}/expired`);
+  }
+
   if (details)
     return (
       <section

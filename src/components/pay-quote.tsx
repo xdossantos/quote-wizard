@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useQuoteManagement } from "../hooks/use-quote-management";
 import { redirect } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
+import Skeleton from "./skeleton";
 
 const NO_TIME_LEFT = "00:00:00";
 interface PayQuoteProps {
@@ -68,12 +69,7 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
     return () => clearInterval(timerId);
   }, [paymentDetails?.expiryDate, formatTimeRemaining]);
 
-  if (loading || !paymentDetails?.address?.address)
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        Loading...
-      </div>
-    );
+  if (loading || !paymentDetails?.address?.address) return <Skeleton />;
   if (timeLeft === NO_TIME_LEFT || error) {
     redirect(`/payin/${uuid}/expired`);
   }

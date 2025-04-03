@@ -1,73 +1,22 @@
-import { useState, useEffect } from "react";
-interface QuoteSummary {
-  uuid: string;
-  merchantDisplayName: string;
-  dateCreated: number;
-  expiryDate: number;
-  quoteExpiryDate?: number;
-  acceptanceExpiryDate?: number;
-  quoteStatus: string;
-  reference: string;
-  type: string;
-  subType: string;
-  status: string;
-  displayCurrency: {
-    currency: string;
-    amount: number;
-    actual: number;
-  };
-  walletCurrency: {
-    currency: string;
-    amount: number;
-    actual: number;
-  };
-  paidCurrency: {
-    currency?: string;
-    amount: number;
-    actual: number;
-  };
-  feeCurrency: {
-    currency: string;
-    amount: number;
-    actual: number;
-  };
-  networkFeeCurrency?: {
-    currency: string;
-    amount: number;
-    actual: number;
-  };
-  displayRate?: number;
-  exchangeRate?: number;
-  address?: string;
-  returnUrl?: string;
-  redirectUrl: string;
-  transactions: unknown[];
-  refund: unknown;
-  refunds: unknown[];
-  currencyOptions: unknown[];
-  flow: string;
-  twoStep: boolean;
-  customerId: string;
-}
+import { useState } from "react";
+import { QuoteDetails, QuoteSummary, UpdateQuoteBody } from "../app/types";
 
-type QuoteDetails = QuoteSummary;
-
-interface UpdateQuoteBody {
-  currency: string;
-  payInMethod: string;
-}
-
-export const useQuoteManagement = (uuid: string) => {
+export const useQuoteManagement = () => {
+  const [uuid, setUuid] = useState<string | null>(null);
   const [summary, setSummary] = useState<QuoteSummary | null>(null);
   const [details, setDetails] = useState<QuoteDetails | null>(null);
+  const [isQuoteConfirmed, setIsQuoteConfirmed] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSummary = async () => {
+  const fetchSummary = async (uuidParams) => {
+    if (!uuidParams || loading) return;
     try {
       setLoading(true);
+      setError(null);
+      setUuid(uuidParams);
       const response = await fetch(
-        `https://api.sandbox.bvnk.com/api/v1/pay/${uuid}/summary`,
+        `https://api.sandbox.bvnk.com/api/v1/pay/${uuidParams}/summary`,
       );
       if (!response.ok) throw new Error("Failed to fetch summary");
       const data = await response.json();
@@ -80,9 +29,14 @@ export const useQuoteManagement = (uuid: string) => {
   };
 
   const updateQuote = async (body: UpdateQuoteBody) => {
+    if (!body || loading) return;
     try {
       setLoading(true);
-      console.table({ preBody: body });
+      setError(null);
+      console.table({
+        updateQuote: "updateQuote",
+        preBody: body,
+      });
       const response = await fetch(
         `https://api.sandbox.bvnk.com/api/v1/pay/${uuid}/update/summary`,
         {
@@ -93,7 +47,7 @@ export const useQuoteManagement = (uuid: string) => {
       );
       if (!response.ok) throw new Error("Failed to update quote");
       const data = await response.json();
-      console.table({ asyncDetails: data });
+      console.table({ updateQuote: "updateQuote", asyncDetails: data });
       setDetails(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -102,9 +56,44 @@ export const useQuoteManagement = (uuid: string) => {
     }
   };
 
-  useEffect(() => {
-    fetchSummary();
-  }, [uuid]);
+  const confirmQuote = async () => {
+    if (!details || loading) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(
+        `https://api.sandbox.bvnk.com/api/v1/pay/${details?.uuid}/accept/summary`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ successUrl: "no_url" }),
+        },
+      );
 
-  return { summary, details, loading, error, updateQuote };
+      if (response.ok) {
+        setIsQuoteConfirmed(true);
+      }
+
+      if (!response.ok) {
+        throw new Error("Failed to accept quote");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Error accepting quote:", err);
+    } finally {
+      setLoading(false);
+    }
+    return isQuoteConfirmed;
+  };
+
+  return {
+    fetchSummary,
+    summary,
+    details,
+    loading,
+    error,
+    isQuoteConfirmed,
+    updateQuote,
+    confirmQuote,
+  };
 };

@@ -2,8 +2,7 @@
 
 import React, { useRef, useEffect, useCallback } from "react";
 import { QuoteDetailsData } from "../app/types";
-import { useRouter } from "next/navigation";
-
+import { redirect } from "next/navigation";
 interface QuoteDetailsProps {
   loading: boolean;
   confirmQuote: () => Promise<boolean>;

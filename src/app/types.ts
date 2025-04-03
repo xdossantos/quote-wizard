@@ -104,6 +104,74 @@ export interface QuoteDetailsData {
   customerId: string;
 }
 
+export interface PaymentDetails {
+  uuid: string;
+  merchantDisplayName: string;
+  merchantId: string;
+  dateCreated: number;
+  expiryDate: number;
+  quoteExpiryDate: number;
+  acceptanceExpiryDate: number;
+  quoteStatus: string;
+  reference: string;
+  type: string;
+  subType: string;
+  status: string;
+  displayCurrency: {
+    currency: string;
+    amount: number;
+    actual: number;
+  };
+  walletCurrency: {
+    currency: string;
+    amount: number;
+    actual: number;
+  };
+  paidCurrency: {
+    currency: string;
+    amount: number;
+    actual: number;
+  };
+  feeCurrency: {
+    currency: string;
+    amount: number;
+    actual: number;
+  };
+  networkFeeCurrency: {
+    currency: null | string;
+    amount: number;
+    actual: number;
+  };
+  displayRate: {
+    base: string;
+    counter: string;
+    rate: number;
+  };
+  exchangeRate: {
+    base: string;
+    counter: string;
+    rate: number;
+  };
+  address: {
+    address: string;
+    tag: null | string;
+    protocol: string;
+    uri: string;
+    alternatives: unknown[];
+  };
+  returnUrl: string;
+  redirectUrl: string;
+  transactions: unknown[];
+  refund: null | unknown;
+  refunds: unknown[];
+  currencyOptions: unknown[];
+  flow: string;
+  twoStep: boolean;
+  customerId: string;
+  networkFeeBilledTo: string;
+  networkFeeRates: unknown[];
+}
+
 export type Currency = "BTC" | "ETH" | "LTC";
 
 export const CURRENCY_OPTIONS = [

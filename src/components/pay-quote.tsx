@@ -3,21 +3,26 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useQuoteManagement } from "../hooks/use-quote-management";
 import ErrorNotification from "./error-notification";
-
+import { QRCodeSVG } from "qrcode.react";
 interface PayQuoteProps {
   uuid: string;
 }
 
 const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
-  const { summary, loading, error } = useQuoteManagement(uuid);
+  const { paymentDetails, loading, error, fetchPaymentDetails } =
+    useQuoteManagement();
   const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
   const [copied, setCopied] = useState<{ amount: boolean; address: boolean }>({
     amount: false,
     address: false,
   });
 
+  useEffect(() => {
+    fetchPaymentDetails(uuid);
+  }, []);
+
   // Format the address for display (shortened version)
-  const formatAddress = (address: string): string => {
+  const formatAddress = (address?: string): string => {
     if (!address) return "";
     return `${address.substring(0, 6)}...${address.substring(address.length - 5)}`;
   };
@@ -53,17 +58,17 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
 
   // Update the countdown timer
   useEffect(() => {
-    if (!summary?.expiryDate) return;
+    if (!paymentDetails?.expiryDate) return;
 
     const updateTimer = () => {
-      setTimeLeft(formatTimeRemaining(summary.expiryDate));
+      setTimeLeft(formatTimeRemaining(Number(paymentDetails?.expiryDate)));
     };
 
     updateTimer();
     const timerId = setInterval(updateTimer, 1000);
 
     return () => clearInterval(timerId);
-  }, [summary?.expiryDate, formatTimeRemaining]);
+  }, [paymentDetails?.expiryDate, formatTimeRemaining]);
 
   if (loading)
     return (
@@ -71,12 +76,13 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
         Loading...
       </div>
     );
-  if (error || !summary) return <ErrorNotification />;
+  if (error || !paymentDetails) return <ErrorNotification />;
 
-  const amount = summary.paidCurrency?.amount || 0;
-  const currency = summary.paidCurrency?.currency || "BTC";
-  console.log(summary.address);
-  const address = summary.address.address || "";
+  const {
+    address: { address },
+    paidCurrency: { amount, currency },
+  } = paymentDetails;
+
   // TODO REDIECT TO EXPIREY?ERROR PAGE IF NO ADDRESS>ADDRSS
 
   return (
@@ -123,9 +129,10 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
             </div>
           </div>
           <div className="flex flex-col items-center gap-[12px] pt-[12px]">
-            <img
-              src={`https://chart.googleapis.com/chart?chs=140x140&cht=qr&chl=${address}&choe=UTF-8`}
-              alt="QR Code"
+            <QRCodeSVG
+              value={address}
+              size={140}
+              level="L"
               className="w-[140px] h-[140px]"
             />
             <div className="text-[12px] leading-[16px] text-[#556877] font-[Inter,sans-serif] text-center">

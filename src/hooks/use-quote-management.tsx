@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  ErrorResponse,
   PaymentDetails,
   QuoteDetails,
   QuoteSummary,
@@ -15,7 +16,7 @@ export const useQuoteManagement = () => {
     null,
   );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | ErrorResponse | null>(null);
 
   const fetchSummary = async (uuidParams: string) => {
     if (!uuidParams || loading) return;
@@ -53,10 +54,17 @@ export const useQuoteManagement = () => {
           body: JSON.stringify(body),
         },
       );
-      if (!response.ok) throw new Error("Failed to update quote");
-      const data = await response.json();
+      const data: ErrorResponse | QuoteDetails = await response.json();
       console.table({ updateQuote: "updateQuote", asyncDetails: data });
-      setDetails(data);
+
+      if (
+        (data as ErrorResponse).message ===
+        "cannot update payment with status EXPIRED"
+      ) {
+        setError(data as ErrorResponse);
+      } else {
+        setDetails(data as QuoteDetails);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

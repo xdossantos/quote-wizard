@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 /**
  * Props for the ErrorNotification component
@@ -21,7 +22,7 @@ interface ErrorNotificationProps {
  * A reusable error notification component that displays an icon, title, and message
  */
 const ErrorNotification: React.FC<ErrorNotificationProps> = ({
-  iconSource = "http://localhost:3000/error.png",
+  iconSource = "/error.png",
   iconAlt = "Error icon",
   title = "Payment details expired",
   message = "The payment details for your transaction have expired.",
@@ -34,10 +35,12 @@ const ErrorNotification: React.FC<ErrorNotificationProps> = ({
     >
       <article className="flex flex-col items-center p-10 w-full bg-white rounded-xl max-w-[460px] shadow-[0_2px_4px_rgba(0,0,0,0.1)] max-md:p-8 max-md:max-w-[400px] max-sm:p-6 max-sm:max-w-full">
         <figure className="mb-5">
-          <img
+          <Image
             src={iconSource}
             alt={iconAlt}
-            className="w-12 h-12 rounded-3xl"
+            width={48}
+            height={48}
+            className="rounded-3xl"
           />
         </figure>
         <h2

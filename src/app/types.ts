@@ -56,13 +56,20 @@ export interface UpdateQuoteBody {
   payInMethod: "crypto";
 }
 
+export interface ErrorResponse {
+  code: string;
+  message: string;
+  parameter: string;
+  requestId: string;
+}
+
 export interface QuoteDetailsData {
   uuid: string;
   merchantDisplayName: string;
-  merchantId: string;
+  merchantId?: string;
   dateCreated: number;
   expiryDate: number;
-  quoteExpiryDate: null | number;
+  quoteExpiryDate?: number;
   acceptanceExpiryDate: string;
   quoteStatus: string;
   reference: string;
@@ -80,7 +87,7 @@ export interface QuoteDetailsData {
     actual: number;
   };
   paidCurrency: {
-    currency: null | string;
+    currency?: string;
     amount: number;
     actual: number;
   };
@@ -89,14 +96,14 @@ export interface QuoteDetailsData {
     amount: number;
     actual: number;
   };
-  networkFeeCurrency: null | string;
-  displayRate: null | number;
-  exchangeRate: null | number;
-  address: null | string;
+  networkFeeCurrency?: string;
+  displayRate?: number;
+  exchangeRate?: number;
+  address?: string;
   returnUrl: string;
   redirectUrl: string;
   transactions: string[];
-  refund: null | string;
+  refund?: string;
   refunds: string[];
   currencyOptions: string[];
   flow: string;
@@ -138,7 +145,7 @@ export interface PaymentDetails {
     actual: number;
   };
   networkFeeCurrency: {
-    currency: null | string;
+    currency?: string;
     amount: number;
     actual: number;
   };
@@ -154,7 +161,7 @@ export interface PaymentDetails {
   };
   address: {
     address: string;
-    tag: null | string;
+    tag?: string;
     protocol: string;
     uri: string;
     alternatives: unknown[];
@@ -162,7 +169,7 @@ export interface PaymentDetails {
   returnUrl: string;
   redirectUrl: string;
   transactions: unknown[];
-  refund: null | unknown;
+  refund?: unknown;
   refunds: unknown[];
   currencyOptions: unknown[];
   flow: string;

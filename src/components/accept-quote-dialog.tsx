@@ -2,25 +2,37 @@
 import * as React from "react";
 import { useQuoteManagement } from "../hooks/use-quote-management";
 import ErrorNotification from "./error-notification";
-import { CURRENCY_OPTIONS } from "../app/types";
+import { Currency, CURRENCY_OPTIONS } from "../app/types";
 import QuoteDetails from "./quote-details";
 
 export default function AcceptQuoteDialog({ uuid }) {
-  const { summary, loading, details, error, updateQuote } = useQuoteManagement(
-    uuid || "fcbacea9-070f-4d69-96ce-db873999c95a",
-  );
-  const [selectedCurrency, setSelectedCurrency] = React.useState("");
+  const {
+    summary,
+    fetchSummary,
+    loading,
+    details,
+    error,
+    updateQuote,
+    confirmQuote,
+  } = useQuoteManagement();
+  const [selectedCurrency, setSelectedCurrency] = React.useState<
+    Currency | undefined
+  >(undefined);
+
+  React.useEffect(() => {
+    fetchSummary(uuid);
+  }, [uuid]);
 
   const handleCurrencyChange = async (
     event: React.ChangeEvent<HTMLSelectElement>,
   ) => {
-    const currency = event.target.value;
+    const currency = event.target.value as Currency;
     setSelectedCurrency(currency);
     await updateQuote({ currency, payInMethod: "crypto" });
   };
 
-  if (error) console.log("Error:", error);
-  if (error && !summary?.displayCurrency) return <ErrorNotification />;
+  if (loading) return <>loading</>;
+  if (error && !summary) return <ErrorNotification />;
 
   return (
     <div className="flex flex-col items-center w-[460px] max-w-full bg-white rounded-[10px] p-[25px] gap-[25px]">
@@ -63,7 +75,19 @@ export default function AcceptQuoteDialog({ uuid }) {
           ))}
         </select>
 
-        {details && <QuoteDetails details={details} loading={loading} />}
+        {details && (
+          <QuoteDetails
+            handleUpdateQuote={() =>
+              updateQuote({
+                currency: selectedCurrency!,
+                payInMethod: "crypto",
+              })
+            }
+            confirmQuote={confirmQuote}
+            details={details}
+            loading={loading}
+          />
+        )}
       </div>
     </div>
   );

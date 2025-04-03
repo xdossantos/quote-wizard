@@ -50,3 +50,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 | `component:headless` | Runs Cypress test suite with specified components opened as before but without opening an individual browser window for each test file. |
 | `test` | Run Jest tests, verifying that all JavaScript files are working correctly as written. This will find and report any errors in your codebase. |
 | `test:watch` | Similar to the previous script but instead of stopping when done runs continuously until stopped manually. |
+
+TODO: 
+ - Move state into context provider 
+ - fix cypress tests 
+ - deploy to Vercel

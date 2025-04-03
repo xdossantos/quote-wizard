@@ -8,6 +8,7 @@ interface QuoteDetailsProps {
   confirmQuote: () => Promise<boolean>;
   details: QuoteDetailsData;
   handleUpdateQuote: () => Promise<void>;
+  uuid: string;
 }
 
 const QuoteDetails: React.FC<QuoteDetailsProps> = ({
@@ -15,6 +16,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   details,
   handleUpdateQuote,
   confirmQuote,
+  uuid,
 }) => {
   const timeLeftRef = useRef<number>(0);
   const { acceptanceExpiryDate } = details;
@@ -66,7 +68,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
 
   if (!details.paidCurrency) {
-    redirect(`/payin/${details.uuid}/expired`);
+    redirect(`/payin/${uuid}/expired`);
   }
 
   if (details)

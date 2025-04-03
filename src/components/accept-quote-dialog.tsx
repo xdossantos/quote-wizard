@@ -89,6 +89,7 @@ export default function AcceptQuoteDialog({ uuid }) {
             confirmQuote={confirmQuote}
             details={details}
             loading={loading}
+            uuid={uuid}
           />
         )}
       </div>

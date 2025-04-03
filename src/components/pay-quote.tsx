@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useQuoteManagement } from "../hooks/use-quote-management";
-import ErrorNotification from "./error-notification";
+import { redirect } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
+
+const NO_TIME_LEFT = "00:00:00";
 interface PayQuoteProps {
   uuid: string;
 }
@@ -11,7 +13,7 @@ interface PayQuoteProps {
 const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
   const { paymentDetails, loading, error, fetchPaymentDetails } =
     useQuoteManagement();
-  const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
+  const [timeLeft, setTimeLeft] = useState<string | null>(null);
   const [copied, setCopied] = useState<{ amount: boolean; address: boolean }>({
     amount: false,
     address: false,
@@ -21,18 +23,16 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
     fetchPaymentDetails(uuid);
   }, []);
 
-  // Format the address for display (shortened version)
   const formatAddress = (address?: string): string => {
     if (!address) return "";
     return `${address.substring(0, 6)}...${address.substring(address.length - 5)}`;
   };
 
-  // Format the full time remaining
   const formatTimeRemaining = useCallback((expiryTimestamp: number): string => {
     const now = new Date().getTime();
     const timeRemaining = Math.max(0, expiryTimestamp - now);
 
-    if (timeRemaining <= 0) return "00:00:00";
+    if (timeRemaining <= 0) return NO_TIME_LEFT;
 
     const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
     const minutes = Math.floor(
@@ -43,7 +43,6 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   }, []);
 
-  // Copy text to clipboard
   const copyToClipboard = async (text: string, type: "amount" | "address") => {
     try {
       await navigator.clipboard.writeText(text);
@@ -56,7 +55,6 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
     }
   };
 
-  // Update the countdown timer
   useEffect(() => {
     if (!paymentDetails?.expiryDate) return;
 
@@ -70,28 +68,28 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
     return () => clearInterval(timerId);
   }, [paymentDetails?.expiryDate, formatTimeRemaining]);
 
-  if (loading)
+  if (loading || !paymentDetails?.address?.address)
     return (
       <div className="flex justify-center items-center min-h-screen">
         Loading...
       </div>
     );
-  if (error || !paymentDetails) return <ErrorNotification />;
+  if (timeLeft === NO_TIME_LEFT || error) {
+    redirect(`/payin/${uuid}/expired`);
+  }
 
   const {
     address: { address },
     paidCurrency: { amount, currency },
   } = paymentDetails;
 
-  // TODO REDIECT TO EXPIREY?ERROR PAGE IF NO ADDRESS>ADDRSS
-
   return (
     <div className="flex justify-center items-center min-h-screen bg-[#f5f5f5] p-5">
-      <div className="flex flex-col items-center w-[449px] p-[25px] bg-white rounded-[10px] gap-[25px]">
-        <div className="text-[20px] font-medium leading-[28px] text-[#0A1628] font-[Inter,sans-serif] w-[303px] text-center">
+      <div className="flex flex-col items-center p-[25px] bg-white rounded-[10px] gap-[25px]">
+        <div className="text-[20px] font-medium leading-[28px] text-[#0A1628] font-[Inter,sans-serif] w-full text-center">
           Pay with {currency}
         </div>
-        <div className="w-[303px] text-[14px] leading-[22px] text-[#556877] text-center font-[Inter,sans-serif]">
+        <div className="w-full text-[14px] leading-[22px] text-[#556877] text-center font-[Inter,sans-serif]">
           To complete this payment send the amount due to the {currency} address
           provided below.
         </div>
@@ -133,7 +131,7 @@ const PayQuote: React.FC<PayQuoteProps> = ({ uuid }) => {
               value={address}
               size={140}
               level="L"
-              className="w-[140px] h-[140px]"
+              className="w-full h-[140px]"
             />
             <div className="text-[12px] leading-[16px] text-[#556877] font-[Inter,sans-serif] text-center">
               {address}

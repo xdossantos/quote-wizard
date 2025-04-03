@@ -16,7 +16,6 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   handleUpdateQuote,
   confirmQuote,
 }) => {
-  const router = useRouter();
   const timeLeftRef = useRef<number>(0);
   const { acceptanceExpiryDate } = details;
 
@@ -37,7 +36,6 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   }, [acceptanceExpiryDate, calculateTimeLeft]);
 
   useEffect(() => {
-    // Don't set up timer if already expired
     if (timeLeftRef.current <= 0) {
       handleUpdateQuote();
       return;
@@ -47,10 +45,8 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
       const newTimeLeft = calculateTimeLeft();
       timeLeftRef.current = newTimeLeft;
 
-      // Force re-render to update the display
       forceUpdate();
 
-      // Only update when timer actually hits 0
       if (newTimeLeft <= 0) {
         clearInterval(timer);
         handleUpdateQuote();
@@ -63,11 +59,10 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const handleConfirm = async () => {
     const isQuoteConfirmed = await confirmQuote();
     if (isQuoteConfirmed) {
-      router.push(`/pay/${details.uuid}`);
+      redirect(`/payin/${details.uuid}/pay`);
     }
   };
 
-  // Force re-render hook
   const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
 
   if (details)
